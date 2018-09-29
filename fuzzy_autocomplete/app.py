@@ -20,8 +20,7 @@ def search():
     start_time = time.perf_counter_ns()
     suggestions = list(autocompleter.suggest_matches(word))
     time_taken = time.perf_counter_ns() - start_time
-    print(f'Execution time: {time_taken} ns')
-    slow = time_taken > 50000
+    slow = time_taken > 100000
     return jsonify({
         'data': suggestions, 'execution_time_ns': time_taken,
         'is_slow': slow})
