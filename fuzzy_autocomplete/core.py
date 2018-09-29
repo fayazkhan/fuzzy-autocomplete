@@ -5,6 +5,7 @@ import operator
 from os import path
 
 import logbook
+from tqdm import tqdm
 
 
 logger = logbook.Logger()
@@ -18,18 +19,20 @@ class Autocompleter:
         self._index_words()
 
     def _index_words(self):
+        # TODO: Optimize memory
         self.word_index = {}
         max_occurrence = max(self.words.values())
-        letter_positions = collections.defaultdict(lambda: collections.defaultdict(list))
-        for word in self.words:
-            for position, letter in enumerate(word):
-                letter_positions[letter][word].append(position)
-        for letter, value in letter_positions.items():
+        substring_positions = collections.defaultdict(lambda: collections.defaultdict(set))
+        for word in tqdm(self.words):
+            logger.info(f'Indexing {word}')
+            for substring, position in set(word_groups(word)):
+                substring_positions[substring][word].add(position)
+        for substring, value in substring_positions.items():
             sorted_index = sorted(
                 ((word, (min(positions), max_occurrence - self.words[word], len(word)))
                  for word, positions in value.items()),
                 key=operator.itemgetter(1))
-            self.word_index[letter] = [word for word, _ in sorted_index]
+            self.word_index[substring] = [word for word, _ in sorted_index]
         keys = len(self.word_index.keys())
         values = sum(len(value) for value in self.word_index.values())
         print(f'Index size: {keys} keys, {values} values')
@@ -42,7 +45,6 @@ class Autocompleter:
         # TODO: Fuzzy match. Tolerate typos
         exclude = []
         if word in self.words:
-            logger.debug(f'Word: {word} Count: {self.words[word]}')
             yield word
             exclude.append(word)
         yield from self._generate_matches(word, exclude)
@@ -50,25 +52,22 @@ class Autocompleter:
     def _generate_matches(self, word: str, exclude: list):
         # TODO: Improve performance
         exclude = exclude[:]
-        for letter in word:
-            bucket = self.word_index[letter]
-            suggestions = self._generate_matches_in_bucket(
-                word=word, bucket=bucket, exclude=exclude[:])
-            for new_word in suggestions:
-                yield new_word
-                exclude.append(new_word)
-
-    def _generate_matches_in_bucket(
-            self, *, word: str, bucket: list, exclude: list):
-        for dictionary_word in bucket:
-            if dictionary_word in exclude:
+        try:
+            bucket = self.word_index[word]
+        except KeyError:
+            return
+        for new_word in bucket:
+            if new_word in exclude:
                 continue
-            for letter in word:
-                if letter not in dictionary_word:
-                    break
-            else:
-                logger.debug(f'Word: {dictionary_word} Count: {self.words[dictionary_word]}')
-                yield dictionary_word
+            yield new_word
+            exclude.append(new_word)
 
 
 filename = path.join(path.dirname(path.abspath(__file__)), 'word_search.tsv')
+
+
+def word_groups(word):
+    length = len(word)
+    for start in range(length):
+        for end in range(length, start, -1):
+            yield word[start: end], start
