@@ -51,11 +51,24 @@ class Autocompleter:
                 yield new_word
                 exclude.add(new_word)
 
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
+
     def _known_edits(self, word: str):
         # Source: http://scottlobdell.me/2015/02/writing-autocomplete-engine-scratch-python/
         length = len(word)
-        word_spits = [(word[:i], word[i:]) for i in range(1, length)]
-        for edit in [first + second[1:] for first, second in word_spits]:
+        word_splits = [(word[:i], word[i:]) for i in range(length)]
+        deletes = (first + second[1:] for first, second in word_splits)
+        swaps = (first + second[1] + second[0] + second[2:]
+                 for first, second in word_splits[:-1]
+                 if second[0] != second[1])
+        replacements = (first + letter + second[1:]
+                        for first, second in word_splits
+                        for letter in self.alphabet
+                        if letter != second[0])
+        insertions = (first + letter + second for first, second in word_splits
+                      for letter in self.alphabet)
+        for edit in set(itertools.chain(deletes, swaps, replacements, insertions)):
+            logger.debug(f'Edit: {edit}')
             if edit in self.word_index:
                 logger.debug(f'Known edit: {edit}')
                 yield edit
@@ -69,10 +82,12 @@ class Autocompleter:
         except KeyError:
             return
         for new_word in bucket:
+            # TODO: Optimize data structure
             if new_word in exclude:
                 continue
             yield new_word
         exclude.update(bucket)
+        logger.debug(f'Excluded elements: {exclude}')
 
 
 filename = path.join(path.dirname(path.abspath(__file__)), 'word_search.tsv')
