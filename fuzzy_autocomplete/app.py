@@ -7,7 +7,8 @@ import logbook
 from .core import Autocompleter
 
 
-logbook.StreamHandler(sys.stderr, level='INFO').push_application()
+logger = logbook.Logger(__name__)
+log_handler = logbook.FingersCrossedHandler(logbook.StreamHandler(sys.stderr))
 autocompleter = Autocompleter()
 app = Flask(__name__)
 
@@ -18,9 +19,12 @@ def search():
     if not word:
         return jsonify({'data': [], 'execution_time_ns': 0})
     start_time = time.perf_counter_ns()
-    suggestions = list(autocompleter.suggest_matches(word))
-    time_taken = time.perf_counter_ns() - start_time
-    slow = time_taken > 100000
+    with log_handler:
+        suggestions = list(autocompleter.suggest_matches(word))
+        time_taken = time.perf_counter_ns() - start_time
+        slow = time_taken > 100_000_000
+        if slow:
+            logger.error(f'Execution too slow: {time_taken}')
     return jsonify({
         'data': suggestions, 'execution_time_ns': time_taken,
         'is_slow': slow})
