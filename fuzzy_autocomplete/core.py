@@ -72,7 +72,7 @@ class Autocompleter:
             if new_word in exclude:
                 continue
             yield new_word
-            exclude.add(new_word)
+        exclude.update(bucket)
 
 
 filename = path.join(path.dirname(path.abspath(__file__)), 'word_search.tsv')
