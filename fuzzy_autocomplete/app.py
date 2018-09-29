@@ -7,7 +7,7 @@ import logbook
 from .core import Autocompleter
 
 
-logbook.StreamHandler(sys.stderr).push_application()
+logbook.StreamHandler(sys.stderr, level='INFO').push_application()
 autocompleter = Autocompleter()
 app = Flask(__name__)
 
