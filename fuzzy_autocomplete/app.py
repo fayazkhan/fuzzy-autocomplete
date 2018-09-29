@@ -1,4 +1,5 @@
 import sys
+import time
 
 from flask import Flask, jsonify, request
 import logbook
@@ -15,5 +16,12 @@ app = Flask(__name__)
 def search():
     word = request.args.get('word')
     if not word:
-        return jsonify({'data': []})
-    return jsonify({'data': list(autocompleter.suggest_matches(word))})
+        return jsonify({'data': [], 'execution_time_ns': 0})
+    start_time = time.perf_counter_ns()
+    suggestions = list(autocompleter.suggest_matches(word))
+    time_taken = time.perf_counter_ns() - start_time
+    print(f'Execution time: {time_taken} ns')
+    slow = time_taken > 50000
+    return jsonify({
+        'data': suggestions, 'execution_time_ns': time_taken,
+        'is_slow': slow})
