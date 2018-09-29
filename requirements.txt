@@ -1,0 +1,8 @@
+Click==7.0
+Flask==1.0.2
+-e git+git@github.com:fayazkhan/fuzzy-autocomplete.git@916184259d786cbf08c175f2e831f2896e36c607#egg=fuzzy_autocomplete
+itsdangerous==0.24
+Jinja2==2.10
+Logbook==1.4.0
+MarkupSafe==1.0
+Werkzeug==0.14.1
