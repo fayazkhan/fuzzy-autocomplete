@@ -2,12 +2,11 @@ backcall==0.1.0
 Click==7.0
 decorator==4.3.0
 Flask==1.0.2
--e git+git@github.com:fayazkhan/fuzzy-autocomplete.git@3884bdf8eaa44a4f43c3f80f491e11463226238c#egg=fuzzy_autocomplete
 ipython==7.0.1
 ipython-genutils==0.2.0
 itsdangerous==0.24
 jedi==0.12.1
-Jinja2==2.10
+Jinja2==2.11.3
 Logbook==1.4.0
 MarkupSafe==1.0
 parso==0.3.1
